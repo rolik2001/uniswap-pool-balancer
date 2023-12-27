@@ -1,0 +1,19 @@
+{
+  "pairs": [
+    {
+      "nodeWssUrl": "wss://goerli.infura.io/ws/v3/",
+      "subgraphUrl": "https://api.thegraph.com/subgraphs/name/liqwiz/uniswap-v3-goerli",
+      "mainPoolData" : {
+        "contract" : "0xe...de",
+        "pairName" : "ETH/USDC"
+      },
+      "comparisonPoolData" : [{
+        "contract" : "0xa",
+        "pairName": "ETH/USDT",
+        "tickSpacing": 60,
+        "token0": "0xd9e9dc39",
+        "token1": "0xE"
+      }]
+    }
+  ]
+}

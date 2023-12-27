@@ -1,0 +1,29 @@
+{
+  "name": "uniswap-pool-balancer",
+  "version": "1.0.0",
+  "description": "Server balancer for different uniV3 pools with the same token",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rolik2001/uniswap-pool-balancer.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rolik2001/uniswap-pool-balancer/issues"
+  },
+  "homepage": "https://github.com/rolik2001/uniswap-pool-balancer#readme",
+  "dependencies": {
+    "@ethersproject/bignumber": "^5.7.0",
+    "@uniswap/v3-core": "^1.0.1",
+    "@uniswap/v3-sdk": "^3.10.0",
+    "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "erc-20-abi": "^1.0.0",
+    "ethers": "^6.9.1",
+    "jsbi": "^4.3.0"
+  }
+}
