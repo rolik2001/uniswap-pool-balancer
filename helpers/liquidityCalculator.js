@@ -1,13 +1,9 @@
-const {getAmountsForLiquidity} = require("./liquidityAmounts");
 const sdk = require("@uniswap/v3-sdk");
-const {BigNumber} = require("@ethersproject/bignumber");
 const JSBI = require("jsbi")
 const {TickSpacingTable} = require("./constants");
-const {Tick} = require("@uniswap/v3-sdk");
 
 module.exports.calcInputLiquidity = (tickInfo) => {
-        const {
-        ticks,
+    const {
         aimTick,
         currentTick,
         initialLiquidity,
@@ -15,96 +11,95 @@ module.exports.calcInputLiquidity = (tickInfo) => {
         tickSpacing
     } = tickInfo;
 
-    let activeTick = currentTick;
-    let activeLiquidity = initialLiquidity;
 
-    let token0 = BigNumber.from("0");
-    let token1 = BigNumber.from("0");
-    let zeroForOne;
-
-    for (let i = 0; i < ticks.length; i++) {
-        let element = ticks[i];
-        let nextTick = getNextTick(element.minTick, element.maxTick, aimTick);
-        let balancesAfterSwap = calcLiquidityInTickSpacing(
-            activeLiquidity,
-            element.minTick,
-            element.maxTick,
-            activeTick,
-            nextTick
-        )
-
-        token0 = token0.add(balancesAfterSwap.token0);
-        token1 = token1.add(balancesAfterSwap.token1);
-
-        if(!zeroForOne){
-            zeroForOne = Math.sign(parseInt(token0.toString())) === -1;
-        }
-
-        activeTick = nextTick;
-        let liquidityNet = checkIsInLiquidity(nextTick,ticksLiquidity)
+    let token0 = JSBI.BigInt("0");
+    let token1 = JSBI.BigInt("0");
+    let zeroForOne =
+        JSBI.greaterThan(
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(currentTick).toString()),
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(aimTick).toString()));
 
 
-        if(liquidityNet) {
-            if (zeroForOne) {
-                liquidityNet = -liquidityNet;
-            }
-            activeLiquidity = sdk.LiquidityMath.addDelta(JSBI.BigInt(activeLiquidity), JSBI.BigInt(liquidityNet));
-        }
-
-    }
-
-    return {
-        token0: token0.add(token0.mul(TickSpacingTable[parseInt(tickSpacing)]*10).div("1000")).toString(),
-        token1: token1.add(token1.mul(TickSpacingTable[parseInt(tickSpacing)]*10).div("1000")).toString()
-    }
-}
-
-
-function calcLiquidityInTickSpacing(liquidity, lowTick, highTick, currentTick, aimTick) {
-
-    let resultBefore = getAmountsForLiquidity(
-        sdk.TickMath.getSqrtRatioAtTick(currentTick).toString(),
-        sdk.TickMath.getSqrtRatioAtTick(lowTick).toString(),
-        sdk.TickMath.getSqrtRatioAtTick(highTick).toString(),
-        liquidity);
-
-
-    let resultAfter = getAmountsForLiquidity(
-        sdk.TickMath.getSqrtRatioAtTick(aimTick).toString(),
-        sdk.TickMath.getSqrtRatioAtTick(lowTick).toString(),
-        sdk.TickMath.getSqrtRatioAtTick(highTick).toString(),
-        liquidity);
-
-
-    return {
-        token0: BigNumber.from(resultBefore.amount0.toString()).sub(resultAfter.amount0.toString()).toString(),
-        token1: BigNumber.from(resultBefore.amount1.toString()).sub(resultAfter.amount1.toString()).toString()
-    }
-
-}
-
-
-function getNextTick(lowTick, highTick, aimTick) {
-    let diff1 = Math.abs(aimTick - lowTick);
-    let diff2 = Math.abs(aimTick - highTick);
-
-    if (aimTick >= lowTick && aimTick <= highTick) {
-        return aimTick;
+    if (ticksLiquidity.length === 0) {
+        token0 = sdk.SqrtPriceMath.getAmount0Delta(
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(currentTick).toString()),
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(aimTick).toString()),
+            JSBI.BigInt(initialLiquidity),
+            true
+        );
+        token1 = sdk.SqrtPriceMath.getAmount1Delta(
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(currentTick).toString()),
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(aimTick).toString()),
+            JSBI.BigInt(initialLiquidity),
+            true
+        );
     } else {
-        return diff1 < diff2 ? lowTick : highTick;
+        let activeLiquidity = initialLiquidity;
+        let activeTick = currentTick;
+        for(let i = 0; i < ticksLiquidity.length;i++){
+            let {tickIdx,liquidityNet} = ticksLiquidity[i];
+            tickIdx = parseInt(tickIdx);
+            liquidityNet = JSBI.BigInt(liquidityNet);
+
+
+            token0 = JSBI.add(token0,sdk.SqrtPriceMath.getAmount0Delta(
+                JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(activeTick).toString()),
+                JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(tickIdx).toString()),
+                JSBI.BigInt(activeLiquidity),
+                true
+            ));
+            token1 = JSBI.add(token1,sdk.SqrtPriceMath.getAmount1Delta(
+                JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(activeTick).toString()),
+                JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(tickIdx).toString()),
+                JSBI.BigInt(activeLiquidity),
+                true
+            ));
+
+            activeTick = tickIdx;
+
+            if (zeroForOne) {
+                liquidityNet = JSBI.multiply(liquidityNet,JSBI.BigInt("-1"));
+            }
+            activeLiquidity = sdk.LiquidityMath.addDelta(JSBI.BigInt(activeLiquidity), liquidityNet);
+        }
+
+        token0 = JSBI.add(token0,sdk.SqrtPriceMath.getAmount0Delta(
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(activeTick).toString()),
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(aimTick).toString()),
+            JSBI.BigInt(activeLiquidity),
+            true
+        ));
+        token1 = JSBI.add(token1,sdk.SqrtPriceMath.getAmount1Delta(
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(activeTick).toString()),
+            JSBI.BigInt(sdk.TickMath.getSqrtRatioAtTick(aimTick).toString()),
+            JSBI.BigInt(activeLiquidity),
+            true
+        ));
+
+    }
+
+
+
+    if(zeroForOne) {
+        token0 = JSBI.add(token0,calcFee(token0,tickSpacing));
+        token0 = JSBI.multiply(JSBI.BigInt("-1"),token0)
+    } else {
+        token1 = JSBI.add(token1,calcFee(token1,tickSpacing));
+        token1 = JSBI.multiply(JSBI.BigInt("-1"),token1)
+    }
+
+    return {
+        token0:token0.toString(),
+        token1:token1.toString()
     }
 }
 
 
-function checkIsInLiquidity(tick, ticksLiquidity) {
-    let result;
 
-    for (let i = 0; i < ticksLiquidity.length; i++) {
-        let {tickIdx, liquidityNet} = ticksLiquidity[i];
-        if(parseInt(tickIdx) === tick){
-            result = parseInt(liquidityNet);
-        }
-    }
+function calcFee(amount,tickSpacing) {
+    return sdk.FullMath.mulDivRoundingUp(
+        amount,
+        JSBI.BigInt(TickSpacingTable[tickSpacing]*10000),
+        JSBI.subtract(JSBI.BigInt("1000000"),JSBI.BigInt(TickSpacingTable[tickSpacing]*10000)));
 
-    return result;
 }

@@ -28,6 +28,7 @@ async function checkPools(){
         provider
     )
     let {tick: mainTick} = await mainPoolContract.slot0();
+    console.log("Main Pool tick : ", mainTick);
 
     for (let i = 0; i < comparisonPoolData.length; i++) {
         let {contract, pairName, tickSpacing, token0, token1} = comparisonPoolData[i];
@@ -39,10 +40,11 @@ async function checkPools(){
         )
 
         let {tick: secondTick} = await secondPoolContract.slot0();
+        console.log(`${pairName} Pool tick : `, secondTick);
 
         if (Math.abs(parseInt(mainTick)) !== Math.abs(parseInt(secondTick))) {
             console.log("Got price different for pair : ", pairName)
-            let tickInfo = parseTicks(mainTick, secondTick, tickSpacing);
+            let tickInfo = parseTicks(mainTick, secondTick);
             tickInfo.initialLiquidity = (await secondPoolContract.liquidity()).toString();
             tickInfo.ticksLiquidity = await getTicksLiquidityNet(
                 subgraphUrl,
@@ -54,7 +56,15 @@ async function checkPools(){
 
             let liquidityToBuy = calcInputLiquidity(tickInfo);
 
-            await swapTokens(provider, token0, token1, tickSpacing, liquidityToBuy, PRIVATE_KEY)
+            await swapTokens(
+                provider,
+                token0,
+                token1,
+                tickInfo.aimTick,
+                tickSpacing,
+                liquidityToBuy,
+                PRIVATE_KEY
+            )
 
         }
     }
