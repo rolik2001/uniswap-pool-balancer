@@ -1,18 +1,20 @@
 {
   "pairs": [
     {
+      "netName": "Goerli",
+      "uniswapBalancerContract": "0xEd36a8",
       "nodeWssUrl": "wss://goerli.infura.io/ws/v3/",
       "subgraphUrl": "https://api.thegraph.com/subgraphs/name/liqwiz/uniswap-v3-goerli",
       "mainPoolData" : {
-        "contract" : "0xe...de",
+        "contract" : "0xEd36a8",
         "pairName" : "ETH/USDC"
       },
       "comparisonPoolData" : [{
-        "contract" : "0xa",
+        "contract" : "0xEd36a8",
         "pairName": "ETH/USDT",
-        "tickSpacing": 60,
-        "token0": "0xd9e9dc39",
-        "token1": "0xE"
+        "token0": "0xEd36a8",
+        "token1": "0xEd36a8",
+        "isActiveTokenSame": false
       }]
     }
   ]

@@ -36,14 +36,19 @@ git clone https://github.com/rolik2001/uniswap-pool-balancer
 
 Before running the application, configure the environment and settings:
 
-- Create a `.env` file in the root directory and set your environment-specific variables (for example use example.eenv).
+- Create a `.env` file in the root directory and set your environment-specific variables (for example use example.env).
 - Adjust the `config.json` file in the root directory to specify the Uniswap pools to monitor (template located at config-template.json)
+- In `config.json` parameter isActiveTokenSame is true when in both pools token to balanced is in the same location (mainPool.token0 = secondPool.token0)
+
+## Contract 
+
+- In contract/ is located main contract that project use. Settings for deploy optimization:200,solidity:0.8.12
 
 ## Usage
 
 To start the application, run:
 ```sh
-node app.js
+npm run start
 ```
 
 ## NOTE

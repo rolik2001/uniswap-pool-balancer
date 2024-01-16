@@ -1,28 +1,18 @@
-module.exports.parseTicks = (mainTick, secondTick) => {
-    mainTick = parseInt(mainTick);
-    secondTick = parseInt(secondTick);
-
-    const mainTickParsed = parseTickToNumber(mainTick);
-    const secondTickParsed = parseTickToNumber(secondTick);
-
-
-    let differenceTick = mainTickParsed - secondTickParsed;
-    if (secondTick < 0) {
+export const calcAimTick = (mainTick: number,
+                            secondTick: number,
+                            tickSecondToCompare: number,
+                            isActiveTokenSame: boolean) => {
+    let differenceTick = mainTick - tickSecondToCompare;
+    if (!isActiveTokenSame && secondTick < 0) {
         differenceTick = -1 * differenceTick;
     }
 
-    const ticks = [];
     const aimTick = secondTick + differenceTick;
 
     return {
-        ticks,
         aimTick,
-        currentTick:secondTick
+        currentTick: secondTick,
     }
 
 }
 
-
-function parseTickToNumber(tick) {
-    return parseInt(tick) > 0 ? parseInt(tick) : -1 * parseInt(tick);
-}

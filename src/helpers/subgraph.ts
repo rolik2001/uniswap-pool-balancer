@@ -1,6 +1,6 @@
-const axios = require("axios");
+import axios from "axios";
 
-function generateTicksLiquidityQuery(address, lowerTick, upperTick) {
+function generateTicksLiquidityQuery(address: string, lowerTick: number, upperTick: number) {
     return `{
     ticks(where: {
       poolAddress:  "${address.toLowerCase()}",
@@ -13,14 +13,31 @@ function generateTicksLiquidityQuery(address, lowerTick, upperTick) {
   }`
 }
 
+export interface TickLiquidityNetInfo {
+    tick: string;
+    liquidityNet: string;
+}
 
-module.exports.getTicksLiquidityNet = async (url,address, firstTick,secondTick) => {
-    [firstTick,secondTick] = firstTick < secondTick ? [firstTick, secondTick] : [secondTick, firstTick];
-    let {ticks} = (
+export const getTicksLiquidityNet = async (url: string,
+                                           address: string,
+                                           firstTick: number,
+                                           secondTick: number
+):Promise<TickLiquidityNetInfo[]> => {
+    [firstTick, secondTick] = firstTick < secondTick ? [firstTick, secondTick] : [secondTick, firstTick];
+    const {ticks} = (
         await axios.post(url, {
             query: generateTicksLiquidityQuery(address, firstTick, secondTick)
         })
     ).data.data;
 
-    return ticks;
+
+    const allTicksLiquidityNets: TickLiquidityNetInfo[] = [];
+    for (let i = 0; i < ticks.length; i++) {
+        allTicksLiquidityNets.push({
+            tick : ticks[i].tickIdx,
+            liquidityNet: ticks[i].liquidityNet
+        })
+    }
+
+    return allTicksLiquidityNets;
 }
